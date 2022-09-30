@@ -1,29 +1,31 @@
 package lab4.dop;
 
+import lab4.dop.message.Message;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-public final class DIServiceLoader<T> {
+public final class DIServiceLoader {
 
     private static final String PATH = "src/main/resources/META-INF/services/";
     String name;
-    ServiceLoader<T> serviceLoader;
-    Map<String, T> beans;
+    ServiceLoader<Message> serviceLoader;
+    Map<String, Message> beans;
 
-    private DIServiceLoader(Class<T> cl) {
+    private DIServiceLoader(Class<Message> cl) {
         name = cl.getName();
         beans = new HashMap<>();
         serviceLoader = ServiceLoader.load(cl);
     }
 
-    public static <T> DIServiceLoader<T> load(Class<T> cl) {
-        return new DIServiceLoader<>(cl);
+    public static DIServiceLoader load(Class<Message> cl) {
+        return new DIServiceLoader(cl);
     }
 
-    public T getBean(String beanName) throws ClassNotFoundException, IOException {
+    public Message getBean(String beanName) throws ClassNotFoundException, IOException {
         FileReader fileReader = new FileReader(PATH + name);
         try (BufferedReader reader = new BufferedReader(fileReader)) {
 
@@ -43,18 +45,18 @@ public final class DIServiceLoader<T> {
                 }
             }
 
-            Iterator<T> iterator = serviceLoader.iterator();
+            Iterator<Message> iterator = serviceLoader.iterator();
             for (int j = 0; j < i; j++) {
                 iterator.next();
             }
-            T bean = iterator.next();
+            Message bean = iterator.next();
             beans.put(beanName, bean);
             System.out.print("ServiceLoader->");
             return bean;
         }
     }
 
-    public T getBean(Class<?> beanClass) {
+    public Message getBean(Class<?> beanClass) {
         return serviceLoader.stream()
                 .filter(o -> o.get().getClass().equals(beanClass))
                 .findFirst()
@@ -62,7 +64,7 @@ public final class DIServiceLoader<T> {
                 .get();
     }
 
-    public Iterator<T> iterator() {
+    public Iterator<Message> iterator() {
         return serviceLoader.iterator();
     }
 }
