@@ -8,7 +8,7 @@ public class Task {
     public static void main(String[] args) {
         try {
             DIServiceLoader<Message> messageDI = DIServiceLoader.load(Message.class);
-            System.out.println(messageDI.getBean("S2").getMessage());
+            System.out.println(messageDI.getBean("S1").getMessage());
             System.out.println(messageDI.getBean("S2").getMessage());
             System.out.println(messageDI.getBean("S2").getMessage());
             System.out.println(messageDI.getBean(IAmHere.class).getMessage());
