@@ -1,21 +1,36 @@
 package lab4.zad13;
-
 import java.lang.reflect.Method;
+import java.util.function.DoubleFunction;
 
 public class Main {
-    public static void main(String[] args) {
-        try {
-            print(Math.class.getMethod("sqrt", double.class), 9, 16, 1);
-            print(Double.class.getMethod("toHexString", double.class), 9, 16, 1);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+    public static void main(String[] args)
+            throws Exception
+    {
+        print1(Math.class.getMethod("sqrt", double.class),  3, 15, 3);
+        System.out.println();
+        print1(Double.class.getMethod("toHexString", double.class),  3, 15, 3);
+        System.out.println();
+        print2(Math::sqrt, 1, 10, 1);
+        System.out.println();
+        print2(Double::toHexString, 1, 10, 1);
+
+    }
+
+    public static void print1(Method met, double lowlimit, double highlimit, double step)
+            throws Exception {
+        System.out.println(met.getName());
+
+        System.out.println(met.getDeclaringClass().getSimpleName() + "." + met.getName() + "(double obj)");
+
+        for (double val = lowlimit; val <= highlimit; val += step) {
+            System.out.println(val + " " + met.invoke(null, val));
         }
     }
 
-    public static void print(Method m, double lowerLimit, double upperLimit, double step) throws Exception {
-        System.out.println(m.getDeclaringClass().getSimpleName() + "." + m.getName() + "(double obj)");
-        for (double i = lowerLimit; i <= upperLimit; i += step) {
-            System.out.println(i + " -> " + m.invoke(null, i));
+    public static void print2(DoubleFunction<Object> f, double lowerlimit, double highlimit, double step) {
+
+        for (double val = lowerlimit; val <= highlimit; val += step) {
+            System.out.println(val + " " + f.apply(val));
         }
     }
 }
