@@ -3,65 +3,67 @@ package lab4.dop;
 import lab4.dop.message.Message;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 public final class DIServiceLoader {
-    private static final String FILE = "src/main/resources/META-INF/services/";
-    String nameInt;
-    ServiceLoader<Message> serviceLoad;
+
+    private static final String PATH = "src/main/resources/META-INF/services/";
+    String name;
+    private final ClassLoader classLoader;
+    private final Class<?> aClass = Message.class;
     Map<String, Message> beans;
 
-    private DIServiceLoader(Class<Message> cl) {
-        nameInt = cl.getName();
+    private DIServiceLoader() {
+        name = aClass.getCanonicalName();
+        classLoader = ClassLoader.getSystemClassLoader();
         beans = new HashMap<>();
-        serviceLoad = ServiceLoader.load(cl);
     }
 
-    public static DIServiceLoader load(Class<Message> cl) {
-        return new DIServiceLoader(cl);
+    public static DIServiceLoader load() {
+        return new DIServiceLoader();
     }
-    public Message getBean(String beanName) throws ClassNotFoundException, IOException {
-        FileReader fileReader = new FileReader(FILE + nameInt);
+
+    public Message getBean(String beanName) throws Exception {
+        FileReader fileReader = new FileReader(PATH + name);
         try (BufferedReader reader = new BufferedReader(fileReader)) {
 
             int i;
             for (i = 0; true; i++) {
                 String line = reader.readLine();
                 if (line == null) {
-                    throw new ClassNotFoundException(beanName + " not found in" + FILE + nameInt);
+                    throw new ClassNotFoundException(beanName + " not found in" + PATH + name);
                 }
                 String[] value = line.split(":");
-                String name1 = value[value.length - 1];
-                if (beans.containsKey(name1) && name1.equals(beanName)) {
-                    System.out.print("Bean->");
-                    return beans.get(name1);
-                } else if (name1.equals(beanName)) {
-                    Iterator<Message> iterator = serviceLoad.iterator();
-                    for (int j = 0; j < i; j++) {
-                        iterator.next();
+                String nameBeanFile = value[value.length - 1];
+                if (beans.containsKey(nameBeanFile) && nameBeanFile.equals(beanName)) {
+                    System.out.print("In map -> ");
+                    return beans.get(nameBeanFile);
+                } else if (nameBeanFile.equals(beanName)) {
+                    System.out.print("New bean -> ");
+                    Object message = classLoader.loadClass(value[0]).getConstructor().newInstance();
+                    if(message instanceof Message){
+                        beans.put(nameBeanFile, (Message) message);
+                        return (Message) message;
+                    }else {
+                        throw new Exception("Класс не реализует интерфейс " + aClass.getSimpleName());
                     }
-                    Message bean = iterator.next();
-                    beans.put(beanName, bean);
-                    System.out.print("ServiceLoader->");
-                    return bean;
                 }
             }
 
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public Message getBean(Class<?> beanClass) {
-        return serviceLoad.stream()
-                .filter(o -> o.get().getClass().equals(beanClass))
-                .findFirst()
-                .get()
-                .get();
+    public Message getBean(Class<?> beanClass) throws ClassNotFoundException {
+        for(Message val :beans.values()){
+            if(val.getClass() == beanClass) return val;
+        }
+        throw new ClassNotFoundException("Такого класса не существует");
     }
 
     public Iterator<Message> iterator() {
-        return serviceLoad.iterator();
+        return beans.values().iterator();
     }
 }
